@@ -1,6 +1,13 @@
-# Simple Email Beacon — Spring
+<p align="center">
+  <img src="Project Elements/Simple_Email_Beacon.png"/>
+</p>
 
-This repository is a Java/Spring port and consolidation of the original [Simple Email Beacon](https://github.com/chuongCode/Simple-Email-Beacon).
+<hr>
+<br/>
+
+`SEB` is a proof of concept on a method of measuring email activity. Previously used to track analytics of U of R's Computer Science Undergraduate Council mailing list.
+
+This repo is a Java/Spring port and consolidation of the original [Simple Email Beacon](https://github.com/chuongCode/Simple-Email-Beacon).
 
 ## Stack
 
@@ -10,7 +17,7 @@ This repository is a Java/Spring port and consolidation of the original [Simple 
 - SQLite with Flyway migrations
 - React 18 / Create React App (carried over from the frontend repository)
 
-`JdbcClient` is used instead of JPA so the Spring implementation can keep the original SQLite table and column names. This makes an existing `database.db` straightforward to carry forward.
+`JdbcClient` is used instead of JPA so the Spring implementation could keep the original SQLite table and column names. This made an existing `database.db` straightforward to carry forward.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the project layout, APIs, database migration process, and runtime configuration.
 

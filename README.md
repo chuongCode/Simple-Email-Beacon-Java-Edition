@@ -1,8 +1,6 @@
 # Simple Email Beacon — Spring
 
-This repository consolidates the original [Node/Express backend](https://github.com/chuongCode/Simple-Email-Beacon) and [React frontend](https://github.com/cszach/simple-web-beacon-frontend) into one Spring Boot application.
-
-The React interface is intentionally unchanged. Maven builds it and places it inside the Spring Boot JAR, so the UI and API are served from the same process and origin.
+This repository is a Java/Spring port and consolidation of the original [Simple Email Beacon](https://github.com/chuongCode/Simple-Email-Beacon).
 
 ## Stack
 
@@ -12,9 +10,9 @@ The React interface is intentionally unchanged. Maven builds it and places it in
 - SQLite with Flyway migrations
 - React 18 / Create React App (carried over from the frontend repository)
 
-`JdbcClient` is used instead of JPA so the Spring implementation can keep the original SQLite table and column names. That makes an existing `database.db` straightforward to carry forward.
+`JdbcClient` is used instead of JPA so the Spring implementation can keep the original SQLite table and column names. This makes an existing `database.db` straightforward to carry forward.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the project layout.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the project layout, APIs, database migration process, and runtime configuration.
 
 ## Run the complete application
 
@@ -58,8 +56,6 @@ npm start
 ```
 
 The development server proxies API calls to Spring on port 8080.
-
-API compatibility, database migration, and runtime configuration are documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Verification
 

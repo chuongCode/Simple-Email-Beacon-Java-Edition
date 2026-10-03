@@ -161,10 +161,6 @@ function App() {
         </section>
       </main>
 
-      <footer className="app-footer">
-        <span>Spring Boot · SQLite · React</span>
-        <span>Data stays on this machine</span>
-      </footer>
     </div>
   );
 }

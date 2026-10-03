@@ -1,7 +1,7 @@
 /* Hallmark · macrostructure: Workbench · genre: modern-minimal · theme: Cobalt
  * pre-emit critique: P5 H5 E4 S5 R5 V4
  * audience: developer · use: operational dashboard · tone: utilitarian
- * enrichment: none · nav: instrument header · footer: Ft2 inline rule · contrast: pass (40–41)
+ * enrichment: none · nav: instrument header · footer: none · contrast: pass (40–41)
  * honest: pass (46) · chrome: pass (47) · tokens: pass (48) · responsive: pass (34, 49–57) · icons: pass (30)
  */
 
@@ -66,8 +66,7 @@ h3 {
 .registry-title-group,
 .toolbar-actions,
 .open-state,
-.record-foot,
-.app-footer {
+.record-foot {
   align-items: center;
   display: flex;
 }
@@ -588,18 +587,6 @@ h1 {
   font-size: var(--text-xl);
 }
 
-.app-footer {
-  border-block-start: var(--rule-thin) solid var(--color-rule);
-  color: var(--color-neutral);
-  flex-direction: column;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  gap: var(--space-xs);
-  justify-content: space-between;
-  margin-inline: clamp(var(--space-md), 4vw, var(--space-xl));
-  padding-block: var(--space-lg);
-}
-
 .visually-hidden {
   border: 0;
   clip: rect(0 0 0 0);
@@ -642,9 +629,6 @@ h1 {
     border-inline-end: var(--rule-thin) solid var(--color-rule);
   }
 
-  .app-footer {
-    flex-direction: row;
-  }
 }
 
 @media (min-width: 60rem) {

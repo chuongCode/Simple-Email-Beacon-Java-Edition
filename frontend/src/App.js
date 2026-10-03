@@ -1,48 +1,104 @@
-import React, { useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import BeaconsList from './BeaconsList';
-import axios from 'axios';
+import {
+  createBeacon,
+  deleteBeacon,
+  listBeacons,
+  renameBeacon
+} from './api';
 import './App.css'
 
-async function getDataAxios(){
-  const response = await axios.get("/generateUUID")
-  console.log(response['data']);
-  return response['data'];
-}
+const REFRESH_INTERVAL_MS = 15000;
 
 function App() {
-  const [beacons, setBeacons] = useState([])
-  const searchRef = useRef();
+  const [beacons, setBeacons] = useState([]);
+  const [searchString, setSearchString] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  function generateBeacon(e) {
-    getDataAxios().then(data => {
-      setBeacons(existingBeacons => {
-        return [...existingBeacons, { name: "", id: data, activated: false, hidden: false }]
-      });
-    });
+  const refreshBeacons = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    try {
+      const data = await listBeacons();
+      setBeacons(data);
+      setLastUpdated(new Date());
+      setError('');
+    } catch (requestError) {
+      setError('Could not load beacons. Check that the Spring server is running.');
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshBeacons();
+    const intervalId = window.setInterval(
+      () => refreshBeacons({ silent: true }),
+      REFRESH_INTERVAL_MS
+    );
+    return () => window.clearInterval(intervalId);
+  }, [refreshBeacons]);
+
+  async function generateBeacon() {
+    setCreating(true);
+    try {
+      const created = await createBeacon();
+      setBeacons(existingBeacons => [created, ...existingBeacons]);
+      setError('');
+    } catch (requestError) {
+      setError('Could not generate a beacon.');
+    } finally {
+      setCreating(false);
+    }
   }
 
-  function onSearchInputChange(e) {
-    const searchString = searchRef.current.value;
-    const newBeacons = [...beacons];
-
-    newBeacons.forEach(beacon => {
-      if (beacon.name.indexOf(searchString) === -1 && beacon.id.indexOf(searchString) === -1) { beacon.hidden = true }
-      else beacon.hidden = false;
-    })
-
-    setBeacons(newBeacons);
+  async function updateBeaconName(id, name) {
+    const updated = await renameBeacon(id, name);
+    setBeacons(existingBeacons => existingBeacons.map(beacon =>
+      beacon.id === id ? updated : beacon
+    ));
   }
+
+  async function removeBeacon(id) {
+    await deleteBeacon(id);
+    setBeacons(existingBeacons => existingBeacons.filter(beacon => beacon.id !== id));
+  }
+
+  const normalizedSearch = searchString.trim().toLowerCase();
+  const visibleBeacons = beacons.filter(beacon => {
+    if (!normalizedSearch) return true;
+    return beacon.name.toLowerCase().includes(normalizedSearch)
+      || beacon.id.toLowerCase().includes(normalizedSearch)
+      || beacon.pixelUrl.toLowerCase().includes(normalizedSearch);
+  });
 
   return (
-    <div class="container">
-      <div class="controls">
-        <input ref={searchRef} type="search" placeholder="Search beacons" onChange={onSearchInputChange}/>
-        <button class="generate-button" onClick={generateBeacon}>+ Generate beacon</button>
+    <div className="container">
+      <div className="controls">
+        <input
+          type="search"
+          placeholder="Search beacons"
+          value={searchString}
+          onChange={event => setSearchString(event.target.value)}
+        />
+        <button onClick={() => refreshBeacons()} disabled={loading}>Refresh status</button>
+        <button className="generate-button" onClick={generateBeacon} disabled={creating}>
+          {creating ? 'Generating...' : '+ Generate beacon'}
+        </button>
       </div>
-      <BeaconsList beacons={beacons} setBeacons={setBeacons} />
+      {lastUpdated && <p className="last-updated">Last updated {lastUpdated.toLocaleTimeString()}</p>}
+      {error && <p className="error-message" role="alert">{error}</p>}
+      {loading && beacons.length === 0
+        ? <p>Loading beacons...</p>
+        : <BeaconsList
+            beacons={visibleBeacons}
+            onRename={updateBeaconName}
+            onDelete={removeBeacon}
+          />}
     </div>
   );
 }
 
 export default App;
-

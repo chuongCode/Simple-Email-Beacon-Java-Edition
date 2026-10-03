@@ -37,6 +37,8 @@ java -jar target/email-beacon-0.1.0-SNAPSHOT.jar
 
 Open <http://localhost:8080>. The Maven build downloads its own Maven, Node, and npm distributions; only Java is required on the host.
 
+The dashboard loads saved beacons from SQLite, refreshes their status every 15 seconds, and lets you rename or delete them. Use **Copy URL** for the raw tracking URL, **Copy HTML** for a ready-to-paste image tag, and **Visits** to inspect recorded loads.
+
 For backend-only development, skip the React build:
 
 ```bash
@@ -61,7 +63,16 @@ The development server proxies API calls to Spring on port 8080.
 | `GET /emailBeacon?UUID=...` | Records a valid beacon visit and always returns a no-cache 1×1 GIF. |
 | `GET /emailBeaconStatus?UUID=...` | Returns `Unread...` or the legacy-shaped visit list. |
 
-The consolidated app also exposes `POST /api/beacons` and `GET /api/beacons` for a future frontend migration without changing the current interface now.
+The dashboard uses the consolidated JSON API:
+
+| Endpoint | Behavior |
+| --- | --- |
+| `GET /api/beacons` | Lists saved beacons with status summaries. |
+| `POST /api/beacons` | Creates a beacon. |
+| `GET /api/beacons/{uuid}` | Returns one beacon and its status summary. |
+| `PATCH /api/beacons/{uuid}` | Updates a beacon name. |
+| `DELETE /api/beacons/{uuid}` | Deletes a beacon and all of its visits. |
+| `GET /api/beacons/{uuid}/visits` | Lists the recorded visits for a beacon. |
 
 ## Move an existing SQLite database
 
@@ -93,4 +104,3 @@ Request metadata currently stores the IP address, user agent, referrer, and acce
 ```
 
 The integration suite covers generation, unread status, tracking-pixel delivery, visit persistence, list/create JSON flows, and the default refusal to trust spoofable forwarded-IP headers.
-

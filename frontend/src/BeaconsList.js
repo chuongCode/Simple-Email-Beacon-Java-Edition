@@ -1,15 +1,23 @@
 import React from 'react';
 import Beacon from './Beacon';
 
-export default function BeaconsList({ beacons, setBeacons }) {
+export default function BeaconsList({ beacons, onRename, onDelete }) {
+  if (beacons.length === 0) {
+    return <p>No beacons found. Generate one to get started.</p>;
+  }
+
   return (
     <ul>
       {
-        beacons.filter(beacon => !beacon.hidden).map(beacon => {
-          return <Beacon key={beacon.id} data={beacon} beacons={beacons} setBeacons={setBeacons}/>
+        beacons.map(beacon => {
+          return <Beacon
+            key={beacon.id}
+            data={beacon}
+            onRename={onRename}
+            onDelete={onDelete}
+          />
         })
       }
     </ul>
   );
 }
-

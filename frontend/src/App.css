@@ -11,6 +11,7 @@ body {
 .controls {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
 }
 
 .controls input {
@@ -36,13 +37,21 @@ ul {
 }
 
 li {
-  display: flex;
   padding: 12px 16px 16px;
-  align-items: center;
   margin-bottom: 16px;
   border-radius: 4px;
   box-shadow: 0px 4px 12px 2px #999999;
   gap: 8px;
+}
+
+.beacon-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.beacon-details {
+  min-width: 0;
 }
 
 li .beacon-name input {
@@ -60,15 +69,93 @@ li .beacon-name input:hover {
 
 li .beacon-id {
   padding-left: 8px;
+  overflow-wrap: anywhere;
 }
 
 li .status {
   margin-left: auto;
+  white-space: nowrap;
 }
 
-li button {
-  border-radius: 100%;
-  border: none;
-  margin-right: 8px;
+.last-opened,
+.beacon-created,
+.last-updated,
+.action-message {
+  color: #666;
+  font-size: 13px;
 }
 
+.beacon-created {
+  padding: 6px 0 0 8px;
+}
+
+.beacon-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.beacon-actions button,
+.controls button:not(.generate-button) {
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  padding: 6px 8px;
+  background: white;
+}
+
+button:disabled {
+  opacity: 0.6;
+}
+
+.action-message {
+  margin-top: 8px;
+}
+
+.error-message {
+  color: #a40000;
+}
+
+.visits {
+  margin-top: 14px;
+  overflow-x: auto;
+}
+
+.visits table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.visits th,
+.visits td {
+  padding: 6px;
+  border-top: 1px solid #ddd;
+  text-align: left;
+  vertical-align: top;
+}
+
+.visits code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .container {
+    width: 100%;
+  }
+
+  .controls,
+  .beacon-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  li .status {
+    margin-left: 0;
+  }
+
+  .beacon-actions {
+    justify-content: flex-start;
+  }
+}

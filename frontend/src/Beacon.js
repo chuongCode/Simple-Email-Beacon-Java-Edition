@@ -1,37 +1,131 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useState } from 'react';
+import { listVisits } from './api';
 
-export default function Beacon({ data, beacons, setBeacons }) {
-  const beaconName = useRef();
+export default function Beacon({ data, onRename, onDelete }) {
+  const [name, setName] = useState(data.name);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const [visits, setVisits] = useState(null);
+  const [visitsLoading, setVisitsLoading] = useState(false);
 
-  function updateName(e) {
-    const beacon = beacons.filter(beacon => beacon.id === data.id)[0];
-    beacon.name = beaconName.current.value;
+  useEffect(() => {
+    setName(data.name);
+    if (visits !== null && visits.length !== data.visitCount) {
+      setVisits(null);
+    }
+  }, [data.name, data.visitCount, visits]);
 
-    setBeacons(beacons);
+  async function updateName() {
+    if (name === data.name) return;
+    setBusy(true);
+    try {
+      await onRename(data.id, name);
+      setMessage('Name saved');
+    } catch (requestError) {
+      setName(data.name);
+      setMessage('Could not save name');
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function deleteBeacon(e) {
-    const newBeacons = beacons.filter(beacon => beacon.id !== data.id)
-    setBeacons(newBeacons)
+  async function removeBeacon() {
+    const label = data.name || data.id;
+    if (!window.confirm(`Delete ${label} and all of its visit records?`)) return;
+    setBusy(true);
+    try {
+      await onDelete(data.id);
+    } catch (requestError) {
+      setMessage('Could not delete beacon');
+      setBusy(false);
+    }
   }
+
+  async function copyText(value, successMessage) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setMessage(successMessage);
+    } catch (clipboardError) {
+      setMessage('Could not copy automatically');
+    }
+  }
+
+  async function toggleVisits() {
+    if (visits !== null) {
+      setVisits(null);
+      return;
+    }
+    setVisitsLoading(true);
+    try {
+      setVisits(await listVisits(data.id));
+      setMessage('');
+    } catch (requestError) {
+      setMessage('Could not load visits');
+    } finally {
+      setVisitsLoading(false);
+    }
+  }
+
+  const embedHtml = `<img src="${data.pixelUrl}" width="1" height="1" alt="">`;
 
   return (
     <li>
-      <div>
-        <div class="beacon-name">
-          <input ref={beaconName} type="text" placeholder={"Add beacon name..."} defaultValue={data.name} onBlur={updateName} />
+      <div className="beacon-row">
+        <div className="beacon-details">
+          <div className="beacon-name">
+            <input
+              type="text"
+              placeholder="Add beacon name..."
+              value={name}
+              maxLength={120}
+              disabled={busy}
+              onChange={event => setName(event.target.value)}
+              onBlur={updateName}
+            />
+          </div>
+          <div className="beacon-id">{data.pixelUrl}</div>
+          <div className="beacon-created">Created {new Date(data.createdAt).toLocaleString()}</div>
         </div>
-        <div class="beacon-id">
-          {data.id}
+        <div className="status">
+          {data.opened
+            ? `Opened ${data.visitCount} time${data.visitCount === 1 ? '' : 's'}`
+            : 'Not opened'}
+          {data.lastOpenedAt && (
+            <div className="last-opened">Last: {new Date(data.lastOpenedAt).toLocaleString()}</div>
+          )}
+        </div>
+        <div className="beacon-actions">
+          <button onClick={() => copyText(data.pixelUrl, 'URL copied')}>Copy URL</button>
+          <button onClick={() => copyText(embedHtml, 'HTML copied')}>Copy HTML</button>
+          <button onClick={toggleVisits} disabled={visitsLoading}>
+            {visitsLoading ? 'Loading...' : visits === null ? 'Visits' : 'Hide visits'}
+          </button>
+          <button onClick={removeBeacon} disabled={busy}>Delete</button>
         </div>
       </div>
-      <div class="status">
-        {(data.activated) ? "Opened" : "Not opened"}
-      </div>
-      <div>
-        <button onClick={deleteBeacon}>✖</button>
-      </div>
+      {message && <div className="action-message" aria-live="polite">{message}</div>}
+      {visits !== null && (
+        <div className="visits">
+          {visits.length === 0
+            ? <p>No visits recorded yet.</p>
+            : (
+              <table>
+                <thead>
+                  <tr><th>Time</th><th>IP address</th><th>Session data</th></tr>
+                </thead>
+                <tbody>
+                  {visits.map(visit => (
+                    <tr key={visit.id}>
+                      <td>{new Date(visit.visitedAt).toLocaleString()}</td>
+                      <td>{visit.ipAddress || 'Unknown'}</td>
+                      <td><code>{visit.sessionData}</code></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+        </div>
+      )}
     </li>
   )
 }
-

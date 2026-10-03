@@ -71,3 +71,7 @@ The development server proxies API calls to Spring on port 8080.
 ```
 
 The integration suite covers generation, unread status, tracking-pixel delivery, visit persistence, load classification, duplicate detection, test loads, list/create JSON flows, and the default refusal to trust spoofable forwarded-IP headers.
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)

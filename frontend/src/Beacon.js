@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { listVisits } from './api';
 
-export default function Beacon({ data, onRename, onDelete, onTest }) {
+const classificationLabels = {
+  HUMAN_LIKELY: 'Likely human',
+  MAIL_PROXY: 'Mail proxy',
+  AUTOMATED: 'Automated',
+  TEST: 'Test',
+  UNKNOWN: 'Unknown'
+};
+
+export default function Beacon({ data, position, onRename, onDelete, onTest }) {
   const [name, setName] = useState(data.name);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -71,7 +79,7 @@ export default function Beacon({ data, onRename, onDelete, onTest }) {
     try {
       await onTest(data.id);
       setVisits(null);
-      setMessage('Test load recorded without changing estimated opens');
+      setMessage('Test load recorded. Estimated opens unchanged.');
     } catch (requestError) {
       setMessage('Could not record test load');
     } finally {
@@ -82,13 +90,15 @@ export default function Beacon({ data, onRename, onDelete, onTest }) {
   const embedHtml = `<img src="${data.pixelUrl}" width="1" height="1" alt="">`;
 
   return (
-    <li>
-      <div className="beacon-row">
-        <div className="beacon-details">
+    <li className="beacon-record" style={{ '--record-index': Math.min(position, 5) }}>
+      <div className="record-main">
+        <div className="record-identity">
           <div className="beacon-name">
+            <label className="visually-hidden" htmlFor={`beacon-name-${data.id}`}>Beacon name</label>
             <input
+              id={`beacon-name-${data.id}`}
               type="text"
-              placeholder="Add beacon name..."
+              placeholder="Untitled beacon"
               value={name}
               maxLength={120}
               disabled={busy}
@@ -96,56 +106,59 @@ export default function Beacon({ data, onRename, onDelete, onTest }) {
               onBlur={updateName}
             />
           </div>
-          <div className="beacon-id">{data.pixelUrl}</div>
-          <div className="beacon-created">Created {new Date(data.createdAt).toLocaleString()}</div>
+          <code className="beacon-id">{data.id}</code>
+          <p className="beacon-created">Created {new Date(data.createdAt).toLocaleString()}</p>
         </div>
-        <div className="status">
-          {data.opened
-            ? `${data.estimatedUniqueOpens} estimated unique open${data.estimatedUniqueOpens === 1 ? '' : 's'}`
-            : 'Not opened'}
-          <div className="load-breakdown">
-            {data.visitCount} total loads · {data.likelyHumanLoadCount} likely human · {data.mailProxyLoadCount} proxy
-            {' · '}{data.automatedLoadCount} automated · {data.duplicateLoadCount} duplicate · {data.testLoadCount} test
+
+        <div className="record-signal">
+          <div className={`open-state ${data.opened ? 'is-opened' : ''}`}>
+            <span className="state-dot" aria-hidden="true" />
+            {data.opened ? 'Activity detected' : 'Waiting for load'}
           </div>
-          {data.firstOpenedAt && (
-            <div className="last-opened">First: {new Date(data.firstOpenedAt).toLocaleString()}</div>
-          )}
-          {data.lastOpenedAt && (
-            <div className="last-opened">Last: {new Date(data.lastOpenedAt).toLocaleString()}</div>
-          )}
+          <div className="record-metrics">
+            <div><strong>{data.estimatedUniqueOpens}</strong><span>Est. opens</span></div>
+            <div><strong>{data.visitCount}</strong><span>Total loads</span></div>
+            <div><strong>{data.duplicateLoadCount}</strong><span>Duplicates</span></div>
+          </div>
+          <p className="confidence-line">{data.likelyHumanLoadCount} likely human · {data.mailProxyLoadCount} proxy · {data.automatedLoadCount} automated · {data.testLoadCount} test</p>
+          {data.lastOpenedAt && <p className="last-opened">Last signal {new Date(data.lastOpenedAt).toLocaleString()}</p>}
         </div>
-        <div className="beacon-actions">
-          <button onClick={() => copyText(data.pixelUrl, 'URL copied')}>Copy URL</button>
-          <button onClick={() => copyText(embedHtml, 'HTML copied')}>Copy HTML</button>
-          <button onClick={addTestVisit} disabled={busy}>Test hit</button>
-          <button onClick={toggleVisits} disabled={visitsLoading}>
-            {visitsLoading ? 'Loading...' : visits === null ? 'Visits' : 'Hide visits'}
+
+        <div className="beacon-actions" aria-label={`Actions for ${data.name || data.id}`}>
+          <button className="button button-secondary" onClick={() => copyText(data.pixelUrl, 'URL copied')}>Copy URL</button>
+          <button className="button button-secondary" onClick={() => copyText(embedHtml, 'HTML copied')}>Copy HTML</button>
+          <button className="button button-secondary" onClick={addTestVisit} disabled={busy}>Test load</button>
+          <button className="button button-secondary" onClick={toggleVisits} disabled={visitsLoading} aria-expanded={visits !== null}>
+            {visitsLoading ? 'Loading…' : visits === null ? 'Inspect visits' : 'Close visits'}
           </button>
-          <button onClick={removeBeacon} disabled={busy}>Delete</button>
+          <button className="button button-danger" onClick={removeBeacon} disabled={busy}>Delete</button>
         </div>
       </div>
-      {message && <div className="action-message" aria-live="polite">{message}</div>}
+      <div className="record-foot">
+        <code className="pixel-url">{data.pixelUrl}</code>
+        {message && <span className="action-message" aria-live="polite">{message}</span>}
+      </div>
       {visits !== null && (
         <div className="visits">
           {visits.length === 0
-            ? <p>No visits recorded yet.</p>
+            ? <p className="visit-empty">No visits recorded for this beacon.</p>
             : (
               <table>
+                <caption className="visually-hidden">Recorded visits for {data.name || data.id}</caption>
                 <thead>
                   <tr><th>Time</th><th>Type</th><th>IP address</th><th>User agent / session data</th></tr>
                 </thead>
                 <tbody>
                   {visits.map(visit => (
                     <tr key={visit.id}>
-                      <td>{new Date(visit.visitedAt).toLocaleString()}</td>
-                      <td>
-                        {visit.classification}
-                        {visit.duplicate && ' · duplicate'}
-                        {visit.testVisit && ' · test'}
+                      <td data-label="Time">{new Date(visit.visitedAt).toLocaleString()}</td>
+                      <td data-label="Type">
+                        <span className={`visit-type type-${visit.classification.toLowerCase()}`}>{classificationLabels[visit.classification] || visit.classification}</span>
+                        {visit.duplicate && <span className="visit-flag">Duplicate</span>}
                       </td>
-                      <td>{visit.ipAddress || 'Unknown'}</td>
-                      <td>
-                        <div>{visit.userAgent || 'Unknown'}</div>
+                      <td data-label="IP address"><code>{visit.ipAddress || 'Unknown'}</code></td>
+                      <td data-label="Client data">
+                        <div className="user-agent">{visit.userAgent || 'Unknown user agent'}</div>
                         <code>{visit.sessionData}</code>
                       </td>
                     </tr>

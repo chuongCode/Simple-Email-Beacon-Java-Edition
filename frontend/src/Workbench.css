@@ -476,9 +476,10 @@ h1 {
 }
 
 .visits {
-  background: var(--color-graphite);
+  background: var(--color-paper-2);
+  border: var(--rule-thin) solid var(--color-rule);
   border-radius: var(--radius-panel);
-  color: var(--color-graphite-ink);
+  color: var(--color-ink-2);
   margin-block-start: var(--space-lg);
   padding: var(--space-sm);
 }
@@ -491,14 +492,14 @@ h1 {
 
 .visits th,
 .visits td {
-  border-block-end: var(--rule-thin) solid var(--color-ink-2);
+  border-block-end: var(--rule-thin) solid var(--color-rule);
   padding: var(--space-sm);
   text-align: start;
   vertical-align: top;
 }
 
 .visits th {
-  color: var(--color-graphite-muted);
+  color: var(--color-neutral);
   font-size: var(--text-xs);
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -506,7 +507,7 @@ h1 {
 }
 
 .visits code {
-  color: var(--color-graphite-muted);
+  color: var(--color-neutral);
   display: block;
   font-size: var(--text-xs);
   overflow-wrap: anywhere;
@@ -532,13 +533,13 @@ h1 {
 
 .type-human_likely {
   border-color: var(--color-success);
-  color: var(--color-graphite-ink);
+  color: var(--color-success);
 }
 
 .type-automated,
 .type-test {
   border-color: var(--color-accent);
-  color: var(--color-graphite-ink);
+  color: var(--color-accent);
 }
 
 .visit-empty,
@@ -673,7 +674,7 @@ h1 {
   }
 
   .visits tr {
-    border-block-end: var(--rule-thin) solid var(--color-ink-2);
+    border-block-end: var(--rule-thin) solid var(--color-rule);
     padding-block: var(--space-sm);
   }
 
@@ -686,7 +687,7 @@ h1 {
   }
 
   .visits td::before {
-    color: var(--color-graphite-muted);
+    color: var(--color-neutral);
     content: attr(data-label);
     font-family: var(--font-body);
     font-size: var(--text-xs);

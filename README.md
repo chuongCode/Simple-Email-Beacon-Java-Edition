@@ -14,17 +14,7 @@ The React interface is intentionally unchanged. Maven builds it and places it in
 
 `JdbcClient` is used instead of JPA so the Spring implementation can keep the original SQLite table and column names. That makes an existing `database.db` straightforward to carry forward.
 
-## Project layout
-
-```text
-frontend/                         Existing React frontend
-src/main/java/.../config          Runtime and CORS configuration
-src/main/java/.../repository      SQLite access with JdbcClient
-src/main/java/.../service         Beacon and request-metadata logic
-src/main/java/.../web             Legacy-compatible and JSON API controllers
-src/main/resources/db/migration   Flyway schema migrations
-src/test                         End-to-end integration tests
-```
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the project layout.
 
 ## Run the complete application
 

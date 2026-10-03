@@ -7,8 +7,12 @@ public record Visit(
         long id,
         Instant visitedAt,
         String ipAddress,
+        String userAgent,
         String sessionData,
-        UUID emailUuid
+        UUID emailUuid,
+        VisitClassification classification,
+        String visitorHash,
+        boolean duplicate,
+        boolean testVisit
 ) {
 }
-

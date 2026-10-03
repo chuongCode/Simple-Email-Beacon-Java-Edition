@@ -20,3 +20,5 @@ beacon:
   public-base-url: ${BEACON_PUBLIC_BASE_URL:http://localhost:8080}
   allowed-origins: ${BEACON_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
   trust-forwarded-headers: ${BEACON_TRUST_FORWARDED_HEADERS:false}
+  deduplication-window-seconds: ${BEACON_DEDUPLICATION_WINDOW_SECONDS:60}
+  visitor-hash-salt: ${BEACON_VISITOR_HASH_SALT:local-development-only-change-me}

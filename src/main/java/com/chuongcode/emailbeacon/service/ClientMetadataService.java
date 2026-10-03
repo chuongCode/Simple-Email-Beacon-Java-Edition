@@ -30,6 +30,10 @@ public class ClientMetadataService {
         return request.getRemoteAddr();
     }
 
+    public String resolveUserAgent(HttpServletRequest request) {
+        return request.getHeader("User-Agent");
+    }
+
     public String serializeSessionData(HttpServletRequest request) {
         Map<String, String> data = new LinkedHashMap<>();
         addIfPresent(data, "userAgent", request.getHeader("User-Agent"));

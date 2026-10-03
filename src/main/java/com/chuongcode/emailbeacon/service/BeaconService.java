@@ -21,6 +21,7 @@ public class BeaconService {
     private final TrackingLinkRepository trackingLinkRepository;
     private final VisitRepository visitRepository;
     private final ClientMetadataService clientMetadataService;
+    private final VisitClassifier visitClassifier;
     private final BeaconProperties properties;
     private final Clock clock;
 
@@ -28,11 +29,13 @@ public class BeaconService {
             TrackingLinkRepository trackingLinkRepository,
             VisitRepository visitRepository,
             ClientMetadataService clientMetadataService,
+            VisitClassifier visitClassifier,
             BeaconProperties properties
     ) {
         this.trackingLinkRepository = trackingLinkRepository;
         this.visitRepository = visitRepository;
         this.clientMetadataService = clientMetadataService;
+        this.visitClassifier = visitClassifier;
         this.properties = properties;
         this.clock = Clock.systemUTC();
     }
@@ -80,15 +83,34 @@ public class BeaconService {
 
     @Transactional
     public boolean recordVisit(UUID uuid, HttpServletRequest request) {
+        return recordVisit(uuid, request, false);
+    }
+
+    @Transactional
+    public boolean recordVisit(UUID uuid, HttpServletRequest request, boolean testVisit) {
         if (!trackingLinkRepository.existsByUuid(uuid)) {
             return false;
         }
 
+        Instant visitedAt = Instant.now(clock);
+        String ipAddress = clientMetadataService.resolveIpAddress(request);
+        String userAgent = clientMetadataService.resolveUserAgent(request);
+        String visitorHash = visitClassifier.visitorHash(ipAddress, userAgent);
+        boolean duplicate = visitRepository.existsRecentVisitorHash(
+                uuid,
+                visitorHash,
+                visitedAt.minusSeconds(properties.deduplicationWindowSeconds()));
+
         visitRepository.create(
-                Instant.now(clock),
-                clientMetadataService.resolveIpAddress(request),
+                visitedAt,
+                ipAddress,
+                userAgent,
                 clientMetadataService.serializeSessionData(request),
-                uuid);
+                uuid,
+                visitClassifier.classify(userAgent, testVisit),
+                visitorHash,
+                duplicate,
+                testVisit);
         return true;
     }
 

@@ -2,7 +2,9 @@ package com.chuongcode.emailbeacon.web;
 
 import com.chuongcode.emailbeacon.model.TrackingLink;
 import com.chuongcode.emailbeacon.model.Visit;
+import com.chuongcode.emailbeacon.model.VisitClassification;
 import com.chuongcode.emailbeacon.service.BeaconService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -77,17 +79,45 @@ public class BeaconApiController {
         return beaconService.findVisits(uuid).stream().map(VisitResponse::from).toList();
     }
 
+    @PostMapping("/{uuid}/test-visit")
+    public BeaconResponse recordTestVisit(@PathVariable UUID uuid, HttpServletRequest request) {
+        if (!beaconService.recordVisit(uuid, request, true)) {
+            throw notFound(uuid);
+        }
+        return get(uuid);
+    }
+
     private BeaconResponse toResponse(TrackingLink link) {
         List<Visit> visits = beaconService.findVisits(link.uuid());
+        List<Visit> eligibleVisits = visits.stream()
+                .filter(visit -> visit.classification().countsAsOpen())
+                .toList();
+        int estimatedUniqueOpens = (int) eligibleVisits.stream()
+                .map(visit -> visit.visitorHash() == null ? "legacy-" + visit.id() : visit.visitorHash())
+                .distinct()
+                .count();
         return new BeaconResponse(
                 link.uuid(),
                 link.name() == null ? "" : link.name(),
                 link.createdAt(),
                 beaconService.pixelUrl(link.uuid()),
                 beaconService.statusUrl(link.uuid()),
-                !visits.isEmpty(),
+                !eligibleVisits.isEmpty(),
                 visits.size(),
-                visits.isEmpty() ? null : visits.getFirst().visitedAt());
+                estimatedUniqueOpens,
+                count(visits, VisitClassification.HUMAN_LIKELY),
+                count(visits, VisitClassification.MAIL_PROXY),
+                count(visits, VisitClassification.AUTOMATED),
+                (int) visits.stream().filter(Visit::duplicate).count(),
+                count(visits, VisitClassification.TEST),
+                eligibleVisits.isEmpty() ? null : eligibleVisits.getLast().visitedAt(),
+                eligibleVisits.isEmpty() ? null : eligibleVisits.getFirst().visitedAt());
+    }
+
+    private int count(List<Visit> visits, VisitClassification classification) {
+        return (int) visits.stream()
+                .filter(visit -> visit.classification() == classification)
+                .count();
     }
 
     private ResponseStatusException notFound(UUID uuid) {
@@ -108,6 +138,13 @@ public class BeaconApiController {
             String statusUrl,
             boolean opened,
             int visitCount,
+            int estimatedUniqueOpens,
+            int likelyHumanLoadCount,
+            int mailProxyLoadCount,
+            int automatedLoadCount,
+            int duplicateLoadCount,
+            int testLoadCount,
+            Instant firstOpenedAt,
             Instant lastOpenedAt
     ) {
     }
@@ -116,14 +153,22 @@ public class BeaconApiController {
             long id,
             Instant visitedAt,
             String ipAddress,
-            String sessionData
+            String userAgent,
+            String sessionData,
+            VisitClassification classification,
+            boolean duplicate,
+            boolean testVisit
     ) {
         static VisitResponse from(Visit visit) {
             return new VisitResponse(
                     visit.id(),
                     visit.visitedAt(),
                     visit.ipAddress(),
-                    visit.sessionData());
+                    visit.userAgent(),
+                    visit.sessionData(),
+                    visit.classification(),
+                    visit.duplicate(),
+                    visit.testVisit());
         }
     }
 }

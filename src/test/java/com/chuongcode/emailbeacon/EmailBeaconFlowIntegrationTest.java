@@ -131,6 +131,66 @@ class EmailBeaconFlowIntegrationTest {
         assertThat(status.body()).doesNotContain("203.0.113.10");
     }
 
+    @Test
+    void classifiesLoadsAndDeduplicatesEstimatedOpens() throws Exception {
+        String id = createBeacon("Accuracy check");
+
+        hitPixel(id, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36");
+        hitPixel(id, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36");
+        hitPixel(id, "Mozilla/5.0 GoogleImageProxy");
+        hitPixel(id, "curl/8.7.1");
+
+        HttpRequest testVisitRequest = HttpRequest.newBuilder(baseUri("/api/beacons/" + id + "/test-visit"))
+                .header("User-Agent", "Mozilla/5.0")
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+        HttpResponse<String> testVisit = httpClient.send(testVisitRequest, HttpResponse.BodyHandlers.ofString());
+
+        assertThat(testVisit.statusCode()).isEqualTo(200);
+        assertThat(testVisit.body())
+                .contains("\"visitCount\":5")
+                .contains("\"estimatedUniqueOpens\":2")
+                .contains("\"likelyHumanLoadCount\":2")
+                .contains("\"mailProxyLoadCount\":1")
+                .contains("\"automatedLoadCount\":1")
+                .contains("\"duplicateLoadCount\":1")
+                .contains("\"testLoadCount\":1")
+                .contains("\"firstOpenedAt\":")
+                .contains("\"lastOpenedAt\":");
+
+        HttpResponse<String> visits = get(
+                "/api/beacons/" + id + "/visits",
+                HttpResponse.BodyHandlers.ofString());
+        assertThat(visits.body())
+                .contains("\"classification\":\"HUMAN_LIKELY\"")
+                .contains("\"classification\":\"MAIL_PROXY\"")
+                .contains("\"classification\":\"AUTOMATED\"")
+                .contains("\"classification\":\"TEST\"")
+                .contains("\"duplicate\":true")
+                .contains("\"userAgent\":");
+    }
+
+    private String createBeacon(String name) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(baseUri("/api/beacons"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"name\":\"" + name + "\"}"))
+                .build();
+        HttpResponse<String> created = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        Matcher matcher = UUID_PATTERN.matcher(created.body());
+        assertThat(created.statusCode()).isEqualTo(201);
+        assertThat(matcher.find()).isTrue();
+        return matcher.group();
+    }
+
+    private void hitPixel(String id, String userAgent) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(baseUri("/emailBeacon?UUID=" + id))
+                .header("User-Agent", userAgent)
+                .GET()
+                .build();
+        HttpResponse<Void> response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        assertThat(response.statusCode()).isEqualTo(200);
+    }
+
     private <T> HttpResponse<T> get(String path, HttpResponse.BodyHandler<T> bodyHandler) throws Exception {
         HttpRequest request = HttpRequest.newBuilder(baseUri(path)).GET().build();
         return httpClient.send(request, bodyHandler);

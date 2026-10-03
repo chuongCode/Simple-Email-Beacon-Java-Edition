@@ -1,0 +1,15 @@
+services:
+  email-beacon:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      BEACON_PUBLIC_BASE_URL: ${BEACON_PUBLIC_BASE_URL:-http://localhost:8080}
+      BEACON_TRUST_FORWARDED_HEADERS: ${BEACON_TRUST_FORWARDED_HEADERS:-false}
+    volumes:
+      - email-beacon-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  email-beacon-data:
+

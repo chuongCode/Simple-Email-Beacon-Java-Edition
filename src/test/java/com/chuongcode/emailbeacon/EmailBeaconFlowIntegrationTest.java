@@ -78,9 +78,39 @@ class EmailBeaconFlowIntegrationTest {
                 .contains("pixelUrl")
                 .contains("statusUrl");
 
+        Matcher idMatcher = UUID_PATTERN.matcher(created.body());
+        assertThat(idMatcher.find()).isTrue();
+        String id = idMatcher.group();
+
         HttpResponse<String> listed = get("/api/beacons", HttpResponse.BodyHandlers.ofString());
         assertThat(listed.statusCode()).isEqualTo(200);
         assertThat(listed.body()).contains("Launch note");
+
+        HttpRequest renameRequest = HttpRequest.newBuilder(baseUri("/api/beacons/" + id))
+                .header("Content-Type", "application/json")
+                .method("PATCH", HttpRequest.BodyPublishers.ofString("{\"name\":\"Renamed beacon\"}"))
+                .build();
+        HttpResponse<String> renamed = httpClient.send(renameRequest, HttpResponse.BodyHandlers.ofString());
+        assertThat(renamed.statusCode()).isEqualTo(200);
+        assertThat(renamed.body()).contains("Renamed beacon");
+
+        get("/emailBeacon?UUID=" + id, HttpResponse.BodyHandlers.discarding());
+        HttpResponse<String> visits = get(
+                "/api/beacons/" + id + "/visits",
+                HttpResponse.BodyHandlers.ofString());
+        assertThat(visits.statusCode()).isEqualTo(200);
+        assertThat(visits.body()).contains("visitedAt").contains("ipAddress");
+
+        HttpRequest deleteRequest = HttpRequest.newBuilder(baseUri("/api/beacons/" + id))
+                .DELETE()
+                .build();
+        HttpResponse<Void> deleted = httpClient.send(deleteRequest, HttpResponse.BodyHandlers.discarding());
+        assertThat(deleted.statusCode()).isEqualTo(204);
+
+        HttpResponse<String> missing = get(
+                "/api/beacons/" + id,
+                HttpResponse.BodyHandlers.ofString());
+        assertThat(missing.statusCode()).isEqualTo(404);
     }
 
     @Test

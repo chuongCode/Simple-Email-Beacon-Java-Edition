@@ -61,6 +61,24 @@ public class BeaconService {
     }
 
     @Transactional
+    public Optional<TrackingLink> rename(UUID uuid, String name) {
+        String normalizedName = name == null ? "" : name.strip();
+        if (!trackingLinkRepository.updateName(uuid, normalizedName)) {
+            return Optional.empty();
+        }
+        return trackingLinkRepository.findByUuid(uuid);
+    }
+
+    @Transactional
+    public boolean delete(UUID uuid) {
+        if (!trackingLinkRepository.existsByUuid(uuid)) {
+            return false;
+        }
+        visitRepository.deleteByEmailUuid(uuid);
+        return trackingLinkRepository.deleteByUuid(uuid);
+    }
+
+    @Transactional
     public boolean recordVisit(UUID uuid, HttpServletRequest request) {
         if (!trackingLinkRepository.existsByUuid(uuid)) {
             return false;

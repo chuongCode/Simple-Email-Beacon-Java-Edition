@@ -45,5 +45,10 @@ public class VisitRepository {
                         UUID.fromString(rs.getString("emailUUID"))))
                 .list();
     }
-}
 
+    public void deleteByEmailUuid(UUID emailUuid) {
+        jdbcClient.sql("DELETE FROM linkVisits WHERE emailUUID = :emailUuid")
+                .param("emailUuid", emailUuid.toString())
+                .update();
+    }
+}

@@ -68,4 +68,21 @@ public class TrackingLinkRepository {
                 .query(Integer.class)
                 .single() == 1;
     }
+
+    public boolean updateName(UUID uuid, String name) {
+        return jdbcClient.sql("""
+                        UPDATE trackingLinks
+                        SET name = :name
+                        WHERE emailUUID = :uuid
+                        """)
+                .param("name", name)
+                .param("uuid", uuid.toString())
+                .update() == 1;
+    }
+
+    public boolean deleteByUuid(UUID uuid) {
+        return jdbcClient.sql("DELETE FROM trackingLinks WHERE emailUUID = :uuid")
+                .param("uuid", uuid.toString())
+                .update() == 1;
+    }
 }

@@ -111,10 +111,12 @@ export default function Beacon({ data, position, onRename, onDelete, onTest }) {
         </div>
 
         <div className="record-signal">
-          <div className={`open-state ${data.opened ? 'is-opened' : ''}`}>
-            <span className="state-dot" aria-hidden="true" />
-            {data.opened ? 'Activity detected' : 'Waiting for load'}
-          </div>
+          {data.opened && (
+            <div className="open-state">
+              <span className="state-dot" aria-hidden="true" />
+              Activity detected
+            </div>
+          )}
           <div className="record-metrics">
             <div><strong>{data.estimatedUniqueOpens}</strong><span>Est. opens</span></div>
             <div><strong>{data.visitCount}</strong><span>Total loads</span></div>

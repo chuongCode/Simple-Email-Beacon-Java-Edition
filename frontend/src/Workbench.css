@@ -415,10 +415,6 @@ h1 {
   text-transform: uppercase;
 }
 
-.open-state:not(.is-opened) .state-dot {
-  background: var(--color-rule-strong);
-}
-
 .record-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

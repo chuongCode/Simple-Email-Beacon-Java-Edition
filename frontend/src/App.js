@@ -112,10 +112,6 @@ function App() {
             <p className="brand-name">Simple Email Beacon</p>
           </div>
         </div>
-        <div className="runtime-state" aria-label="Application status">
-          <span className="runtime-dot" aria-hidden="true" />
-          <span>Local session</span>
-        </div>
       </header>
 
       <main className="workspace">

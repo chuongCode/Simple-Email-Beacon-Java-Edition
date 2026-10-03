@@ -1,9 +1,0 @@
-{
-  "date": "2026-10-03",
-  "font_stack": "Arial and Helvetica",
-  "palette": "White, gray, and steel blue literals",
-  "motion": "none",
-  "spacing": "ad hoc pixels",
-  "framework": "React 18 with Create React App",
-  "decision": "Replace the minimal visual layer; preserve application behavior and component ownership"
-}

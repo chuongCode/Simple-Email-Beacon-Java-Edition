@@ -107,10 +107,9 @@ function App() {
     <div className="app-shell">
       <header className="app-header">
         <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">EB</span>
+          <span className="brand-mark" aria-hidden="true">SEB</span>
           <div>
-            <p className="brand-name">Email Beacon</p>
-            <p className="brand-meta">Local tracking console</p>
+            <p className="brand-name">Simple Email Beacon</p>
           </div>
         </div>
         <div className="runtime-state" aria-label="Application status">
@@ -121,11 +120,7 @@ function App() {
 
       <main className="workspace">
         <section className="workspace-heading" aria-labelledby="page-title">
-          <div>
-            <p className="section-label">Beacon registry</p>
-            <h1 id="page-title">Tracking workbench</h1>
-          </div>
-          <p className="workspace-description">Generate pixels, inspect load confidence, and verify each tracking path from one local console.</p>
+          <h1 id="page-title">Tracking workbench</h1>
         </section>
 
         <section className="summary-strip" aria-label="Tracking summary">

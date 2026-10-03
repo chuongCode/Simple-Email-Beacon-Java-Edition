@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { listVisits } from './api';
 
-export default function Beacon({ data, onRename, onDelete }) {
+export default function Beacon({ data, onRename, onDelete, onTest }) {
   const [name, setName] = useState(data.name);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -66,6 +66,19 @@ export default function Beacon({ data, onRename, onDelete }) {
     }
   }
 
+  async function addTestVisit() {
+    setBusy(true);
+    try {
+      await onTest(data.id);
+      setVisits(null);
+      setMessage('Test load recorded without changing estimated opens');
+    } catch (requestError) {
+      setMessage('Could not record test load');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const embedHtml = `<img src="${data.pixelUrl}" width="1" height="1" alt="">`;
 
   return (
@@ -88,8 +101,15 @@ export default function Beacon({ data, onRename, onDelete }) {
         </div>
         <div className="status">
           {data.opened
-            ? `Opened ${data.visitCount} time${data.visitCount === 1 ? '' : 's'}`
+            ? `${data.estimatedUniqueOpens} estimated unique open${data.estimatedUniqueOpens === 1 ? '' : 's'}`
             : 'Not opened'}
+          <div className="load-breakdown">
+            {data.visitCount} total loads · {data.likelyHumanLoadCount} likely human · {data.mailProxyLoadCount} proxy
+            {' · '}{data.automatedLoadCount} automated · {data.duplicateLoadCount} duplicate · {data.testLoadCount} test
+          </div>
+          {data.firstOpenedAt && (
+            <div className="last-opened">First: {new Date(data.firstOpenedAt).toLocaleString()}</div>
+          )}
           {data.lastOpenedAt && (
             <div className="last-opened">Last: {new Date(data.lastOpenedAt).toLocaleString()}</div>
           )}
@@ -97,6 +117,7 @@ export default function Beacon({ data, onRename, onDelete }) {
         <div className="beacon-actions">
           <button onClick={() => copyText(data.pixelUrl, 'URL copied')}>Copy URL</button>
           <button onClick={() => copyText(embedHtml, 'HTML copied')}>Copy HTML</button>
+          <button onClick={addTestVisit} disabled={busy}>Test hit</button>
           <button onClick={toggleVisits} disabled={visitsLoading}>
             {visitsLoading ? 'Loading...' : visits === null ? 'Visits' : 'Hide visits'}
           </button>
@@ -111,14 +132,22 @@ export default function Beacon({ data, onRename, onDelete }) {
             : (
               <table>
                 <thead>
-                  <tr><th>Time</th><th>IP address</th><th>Session data</th></tr>
+                  <tr><th>Time</th><th>Type</th><th>IP address</th><th>User agent / session data</th></tr>
                 </thead>
                 <tbody>
                   {visits.map(visit => (
                     <tr key={visit.id}>
                       <td>{new Date(visit.visitedAt).toLocaleString()}</td>
+                      <td>
+                        {visit.classification}
+                        {visit.duplicate && ' · duplicate'}
+                        {visit.testVisit && ' · test'}
+                      </td>
                       <td>{visit.ipAddress || 'Unknown'}</td>
-                      <td><code>{visit.sessionData}</code></td>
+                      <td>
+                        <div>{visit.userAgent || 'Unknown'}</div>
+                        <code>{visit.sessionData}</code>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

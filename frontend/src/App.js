@@ -4,6 +4,7 @@ import {
   createBeacon,
   deleteBeacon,
   listBeacons,
+  recordTestVisit,
   renameBeacon
 } from './api';
 import './App.css'
@@ -66,6 +67,13 @@ function App() {
     setBeacons(existingBeacons => existingBeacons.filter(beacon => beacon.id !== id));
   }
 
+  async function addTestVisit(id) {
+    const updated = await recordTestVisit(id);
+    setBeacons(existingBeacons => existingBeacons.map(beacon =>
+      beacon.id === id ? updated : beacon
+    ));
+  }
+
   const normalizedSearch = searchString.trim().toLowerCase();
   const visibleBeacons = beacons.filter(beacon => {
     if (!normalizedSearch) return true;
@@ -96,6 +104,7 @@ function App() {
             beacons={visibleBeacons}
             onRename={updateBeaconName}
             onDelete={removeBeacon}
+            onTest={addTestVisit}
           />}
     </div>
   );

@@ -78,11 +78,18 @@ li .status {
 }
 
 .last-opened,
+.load-breakdown,
 .beacon-created,
 .last-updated,
 .action-message {
   color: #666;
   font-size: 13px;
+}
+
+.load-breakdown {
+  max-width: 290px;
+  margin-top: 4px;
+  white-space: normal;
 }
 
 .beacon-created {

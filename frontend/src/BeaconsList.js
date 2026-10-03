@@ -1,7 +1,7 @@
 import React from 'react';
 import Beacon from './Beacon';
 
-export default function BeaconsList({ beacons, onRename, onDelete }) {
+export default function BeaconsList({ beacons, onRename, onDelete, onTest }) {
   if (beacons.length === 0) {
     return <p>No beacons found. Generate one to get started.</p>;
   }
@@ -15,6 +15,7 @@ export default function BeaconsList({ beacons, onRename, onDelete }) {
             data={beacon}
             onRename={onRename}
             onDelete={onDelete}
+            onTest={onTest}
           />
         })
       }

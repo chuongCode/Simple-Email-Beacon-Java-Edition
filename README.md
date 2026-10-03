@@ -37,7 +37,21 @@ java -jar target/email-beacon-0.1.0-SNAPSHOT.jar
 
 Open <http://localhost:8080>. The Maven build downloads its own Maven, Node, and npm distributions; only Java is required on the host.
 
-The dashboard loads saved beacons from SQLite, refreshes their status every 15 seconds, and lets you rename or delete them. Use **Copy URL** for the raw tracking URL, **Copy HTML** for a ready-to-paste image tag, and **Visits** to inspect recorded loads.
+The dashboard loads saved beacons from SQLite, refreshes their status every 15 seconds, and lets you rename or delete them. Use **Copy URL** for the raw tracking URL, **Copy HTML** for a ready-to-paste image tag, **Test hit** to verify tracking without changing the estimated-open count, and **Visits** to inspect recorded loads.
+
+### How tracking accuracy works
+
+Every image request is retained as a raw load, then labeled as likely human, mail proxy, automated, test, or unknown. Requests from the same hashed IP-address/user-agent combination inside the deduplication window are also marked as duplicates. The dashboard uses those signals to show:
+
+- **Total loads:** every request received by the pixel endpoint.
+- **Estimated unique opens:** distinct visitors after excluding known automated and test loads.
+- **Likely human:** loads whose user agent looks like a normal browser or mail client.
+- **Mail proxy:** loads identified as an email provider's image proxy.
+- **Automated:** recognizable bots, scanners, previews, and command-line clients.
+- **Duplicate:** a repeated visitor fingerprint during the configured time window.
+- **Test:** loads created with the dashboard's test action.
+
+These are transparent heuristics, not proof that a particular person read an email. Mail providers can prefetch or proxy images, privacy features can hide the recipient's real address and device, and some clients block remote images entirely. The app therefore preserves raw counts and labels uncertain traffic instead of presenting every pixel request as a confirmed human open.
 
 For backend-only development, skip the React build:
 
@@ -73,6 +87,7 @@ The dashboard uses the consolidated JSON API:
 | `PATCH /api/beacons/{uuid}` | Updates a beacon name. |
 | `DELETE /api/beacons/{uuid}` | Deletes a beacon and all of its visits. |
 | `GET /api/beacons/{uuid}/visits` | Lists the recorded visits for a beacon. |
+| `POST /api/beacons/{uuid}/test-visit` | Records a labeled test load without affecting estimated opens. |
 
 ## Move an existing SQLite database
 
@@ -94,6 +109,8 @@ Do not run the Node and Spring applications against the same SQLite file at the 
 | `BEACON_PUBLIC_BASE_URL` | `http://localhost:8080` | Public origin placed into generated tracking URLs. Set this in deployment. |
 | `BEACON_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:3000` | Comma-separated origins allowed during separate frontend development. |
 | `BEACON_TRUST_FORWARDED_HEADERS` | `false` | Uses the first `X-Forwarded-For` value only when deployment has a trusted reverse proxy. |
+| `BEACON_DEDUPLICATION_WINDOW_SECONDS` | `60` | Time window in which the same visitor fingerprint is labeled as a duplicate. |
+| `BEACON_VISITOR_HASH_SALT` | local-only placeholder | Secret used to hash the IP/user-agent fingerprint. Set a stable, private value in deployment. |
 
 Request metadata currently stores the IP address, user agent, referrer, and accepted language. The old `geoip-lite` lookup is not silently replaced with a network service; adding an explicitly configured local GeoLite database is a follow-up so deployments can make the privacy and data-source choice themselves.
 
@@ -103,4 +120,4 @@ Request metadata currently stores the IP address, user agent, referrer, and acce
 ./mvnw test -Dskip.frontend=true
 ```
 
-The integration suite covers generation, unread status, tracking-pixel delivery, visit persistence, list/create JSON flows, and the default refusal to trust spoofable forwarded-IP headers.
+The integration suite covers generation, unread status, tracking-pixel delivery, visit persistence, load classification, duplicate detection, test loads, list/create JSON flows, and the default refusal to trust spoofable forwarded-IP headers.

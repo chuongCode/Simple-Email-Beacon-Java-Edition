@@ -29,3 +29,7 @@ export async function listVisits(id) {
   return response.data;
 }
 
+export async function recordTestVisit(id) {
+  const response = await api.post(`/beacons/${id}/test-visit`);
+  return response.data;
+}

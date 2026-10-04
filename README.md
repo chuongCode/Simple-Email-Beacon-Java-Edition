@@ -15,7 +15,7 @@ This repo is a Java/Spring port and consolidation of the original [Simple Email 
 - Spring Boot 4.1
 - Spring Web MVC and `JdbcClient`
 - SQLite with Flyway migrations
-- React 18 / Create React App (carried over from the frontend repository)
+- React 18
 
 `JdbcClient` is used instead of JPA so the Spring implementation could keep the original SQLite table and column names. This made an existing `database.db` straightforward to carry forward.
 

@@ -7,7 +7,7 @@
 
 `SEB` is a proof of concept on utilizing OSINT techniques to measure email activity. Previously used to track analytics of U of R's Computer Science Undergraduate Council mailing list.
 
-This repo is a Java/Spring port and consolidation of the original [Simple Email Beacon](https://github.com/chuongCode/Simple-Email-Beacon).
+This repo is a Java/Spring port and full-stack consolidation of the original [Simple Email Beacon](https://github.com/chuongCode/Simple-Email-Beacon).
 
 ## Stack
 
